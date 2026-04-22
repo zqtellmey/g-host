@@ -2,7 +2,7 @@ name: Ghostne
 
 on:
   schedule:
-    - cron: '0 */12 * * *'  # 每 12 小时运行一次
+    - cron: '0 */10 * * *'  # 每 12 小时运行一次
   workflow_dispatch:        # 允许手动运行
 
 jobs:
