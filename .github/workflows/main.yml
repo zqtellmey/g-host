@@ -1,0 +1,83 @@
+name: Ghostne
+
+on:
+  schedule:
+    - cron: '0 */12 * * *'  # 每 12 小时运行一次
+  workflow_dispatch:        # 允许手动运行
+
+jobs:
+  Auto_renew_greathost:
+    runs-on: ubuntu-latest
+    
+    permissions:
+      actions: write
+      contents: write   
+      
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # 1. 设置 Python 环境
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      # 2. 安装 Chrome 浏览器
+      - name: Install Google Chrome
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y google-chrome-stable
+
+      # 3. 安装依赖 (增加 [socks] 扩展，这是请求 TG 成功的关键)
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install selenium==4.18.1 selenium-wire==5.1.0 blinker==1.7.0 requests[socks]
+
+      # 4. 启动 Xray 代理 (保持你原有的逻辑，这部分在其他项目验证过是通的)
+      - name: 🌐 启动 Xray 代理
+        env:
+          V2RAY_CONFIG: ${{ secrets.V2RAY_CONFIG }}
+        run: |
+          echo "⬇️ 正在下载 Xray-core..."
+          wget -q https://github.com/XTLS/Xray-core/releases/latest/download/Xray-linux-64.zip
+          unzip -q Xray-linux-64.zip -d xray_bin
+          echo "$V2RAY_CONFIG" > xray_bin/config.json
+          cd xray_bin
+          nohup ./xray run -c config.json > xray.log 2>&1 &
+          cd ..
+          sleep 5
+          echo "🌐 测试代理连通性..."
+          curl -x http://127.0.0.1:10808 -I https://www.google.com/generate_204 || echo "⚠️ 代理测试未通过"
+
+      # 5. 运行 Python 脚本 (修正了环境变量映射，并强制使用 socks5h)
+      - name: Run renew script
+        env:
+          GREATHOST_EMAIL: ${{ secrets.GREATHOST_EMAIL }}
+          GREATHOST_PASSWORD: ${{ secrets.GREATHOST_PASSWORD }}
+          # 修正：确保这里的 secrets 变量名与你 GitHub 后台一致
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}    
+          # 协议改为 socks5h，利用远程 DNS 解析解决 GitHub 屏蔽 api.telegram.org 的问题
+          PROXY_URL: "socks5h://127.0.0.1:10808" 
+        run: python ghost.py
+
+      # 6. 更新 README (即使脚本出错也会运行，保留最后的状态)
+      - name: Push README changes
+        if: always()
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add README.md
+          git commit -m "docs: update renewal status [skip ci]" || exit 0
+          git push
+
+      # 7. 🧹 清理运行记录
+      - name: 🧹 Delete old runs
+        uses: MajorScruffy/delete-old-workflow-runs@v0.3.0
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        with:
+          repository: ${{ github.repository }}
+          older-than-seconds: 3600
