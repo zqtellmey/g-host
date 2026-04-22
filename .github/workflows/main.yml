@@ -64,14 +64,14 @@ jobs:
         run: python ghost.py
 
       # 6. 更新 README (即使脚本出错也会运行，保留最后的状态)
-      - name: Push README changes
-        if: always()
-        run: |
-          git config --local user.email "github-actions[bot]@users.noreply.github.com"
-          git config --local user.name "github-actions[bot]"
-          git add README.md
-          git commit -m "docs: update renewal status [skip ci]" || exit 0
-          git push
+      #- name: Push README changes
+      #  if: always()
+      #  run: |
+       #   git config --local user.email "github-actions[bot]@users.noreply.github.com"
+        #  git config --local user.name "github-actions[bot]"
+       #   git add README.md
+       #   git commit -m "docs: update renewal status [skip ci]" || exit 0
+       #   git push
 
       # 7. 🧹 清理运行记录
       - name: 🧹 Delete old runs
