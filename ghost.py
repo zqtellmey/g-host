@@ -15,8 +15,9 @@ PASSWORD = os.getenv("GREATHOST_PASSWORD", "")
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "")
 TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID", "")
 TARGET_NAME = os.getenv("TARGET_NAME", "myserver1")
-# 获取 YML 传进来的代理地址
-PROXY_ENV = os.getenv("PROXY_SOCKS5") 
+
+# 直接定义你在 YML 中 sing-box 开启的本地端口
+LOCAL_PROXY = "socks5h://127.0.0.1:10808"
 
 STATUS_MAP = {
     "running": ["🟢", "Running"],
@@ -52,12 +53,8 @@ def send_notice(kind, fields):
     msg = f"{titles.get(kind, '📢 通知')}\n\n{body}\n📅 时间: {now_shanghai()}"
     
     if TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID:
-        # TG 必须走代理，否则 GitHub 连不上
-        proxies = None
-        if PROXY_ENV:
-            p_url = PROXY_ENV.replace("socks5://", "socks5h://")
-            proxies = {"http": p_url, "https": p_url}
-            
+        # 显式指定 TG 发送使用本地代理
+        proxies = {"http": LOCAL_PROXY, "https": LOCAL_PROXY}
         try:
             r = requests.post(
                 f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage",
@@ -65,7 +62,7 @@ def send_notice(kind, fields):
                 proxies=proxies,
                 timeout=20
             )
-            print(f"✅ Telegram 通知状态: {r.status_code}")
+            print(f"✅ TG 发送状态: {r.status_code}")
         except Exception as e:
             print(f"❌ TG 发送异常: {e}")
 
@@ -77,25 +74,19 @@ class GH:
         opts.add_argument("--disable-dev-shm-usage")
         opts.add_argument("--ignore-certificate-errors")
         
-        sw_options = {}
-        if PROXY_ENV:
-            # 关键：同时在 Chrome 参数和 Selenium-Wire 中注入代理
-            proxy_url = PROXY_ENV.replace("socks5://", "socks5h://")
-            
-            # 1. 给 Chrome 核心增加代理参数 (解决 ERR_CONNECTION_CLOSED)
-            opts.add_argument(f'--proxy-server={proxy_url}')
-            
-            # 2. 给 Selenium-Wire 增加拦截代理
-            sw_options = {
-                'proxy': {
-                    'http': proxy_url,
-                    'https': proxy_url,
-                    'no_proxy': 'localhost,127.0.0.1'
-                }
+        # 强制 Chrome 使用 YML 启动的 sing-box 端口
+        opts.add_argument(f'--proxy-server={LOCAL_PROXY}')
+        
+        # Selenium-Wire 拦截配置
+        sw_options = {
+            'proxy': {
+                'http': LOCAL_PROXY,
+                'https': LOCAL_PROXY,
+                'no_proxy': 'localhost,127.0.0.1'
             }
-            print(f"🔧 代理模式已开启: {proxy_url}")
+        }
 
-        # 自动下载驱动
+        print(f"🔧 正在通过本地代理启动浏览器: {LOCAL_PROXY}")
         service = Service(ChromeDriverManager().install())
         self.d = webdriver.Chrome(service=service, options=opts, seleniumwire_options=sw_options)
         self.w = WebDriverWait(self.d, 30)
@@ -106,20 +97,14 @@ class GH:
 
     def get_ip(self):
         try:
-            # 增加重试逻辑，确保代理已完全建立
-            for _ in range(3):
-                try:
-                    self.d.get("https://api.ipify.org?format=json")
-                    ip = json.loads(self.d.find_element(By.TAG_NAME, "body").text).get("ip", "Unknown")
-                    print(f"🌐 出口 IP: {ip}")
-                    return ip
-                except:
-                    time.sleep(5)
-            return "Retry Failed"
+            self.d.get("https://api.ipify.org?format=json")
+            ip = json.loads(self.d.find_element(By.TAG_NAME, "body").text).get("ip", "Unknown")
+            print(f"🌐 出口 IP: {ip}")
+            return ip
         except: return "Unknown"
 
     def login(self):
-        print(f"🔑 尝试登录 GreatHost...")
+        print(f"🔑 尝试登录...")
         self.d.get("https://greathost.es/login")
         self.w.until(EC.presence_of_element_located((By.NAME, "email"))).send_keys(EMAIL)
         self.d.find_element(By.NAME, "password").send_keys(PASSWORD)
@@ -181,8 +166,8 @@ def run():
             send_notice("renew_failed", [("📛","名称",TARGET_NAME), ("💡","提示",res.get("message","API未生效"))])
             
     except Exception as e:
-        print(f"🚨 报错详情: {e}")
-        send_notice("error", [("📛", "名称", TARGET_NAME), ("❌", "错误", f"<code>{str(e)[:100]}</code>")])
+        print(f"🚨 报错: {e}")
+        send_notice("error", [("📛", "名称", TARGET_NAME), ("❌", "原因", f"<code>{str(e)[:100]}</code>")])
     finally:
         if 'gh' in locals(): gh.close()
 
