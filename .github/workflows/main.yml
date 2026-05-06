@@ -65,7 +65,7 @@ jobs:
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}    
           PROXY_URL: "socks5h://127.0.0.1:10808" 
           TARGET_NAME: ${{ secrets.TARGET_NAME }}
-        run: python greathost.py
+        run: python ghost.py
 
       # 6. 更新 README
       - name: Push README changes
