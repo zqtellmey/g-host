@@ -29,27 +29,118 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y google-chrome-stable
 
-      # 3. 安装依赖 (增加 [socks] 扩展，这是请求 TG 成功的关键)
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install selenium==4.18.1 selenium-wire==5.1.0 blinker==1.7.0 requests[socks]
-
-      # 4. 启动 Xray 代理 (保持你原有的逻辑，这部分在其他项目验证过是通的)
-      - name: 🌐 启动 Xray 代理
+      - name: 安装并启动代理 (全自动适配内核)
         env:
-          V2RAY_CONFIG: ${{ secrets.V2RAY_CONFIG }}
+          PROXY_NODE: ${{ secrets.PROXY_NODE }}
         run: |
-          echo "⬇️ 正在下载 Xray-core..."
-          wget -q https://github.com/XTLS/Xray-core/releases/latest/download/Xray-linux-64.zip
-          unzip -q Xray-linux-64.zip -d xray_bin
-          echo "$V2RAY_CONFIG" > xray_bin/config.json
-          cd xray_bin
-          nohup ./xray run -c config.json > xray.log 2>&1 &
-          cd ..
-          sleep 5
-          echo "🌐 测试代理连通性..."
-          curl -x http://127.0.0.1:10808 -I https://www.google.com/generate_204 || echo "⚠️ 代理测试未通过"
+          if [ -z "$PROXY_NODE" ]; then
+            echo "[INFO] 未配置代理，尝试直连模式..."
+            exit 0
+          fi
+          
+          # 1. 下载并安装最新的 Sing-box 核心
+          TAG=$(curl -s https://api.github.com/repos/SagerNet/sing-box/releases/latest | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
+          VERSION=${TAG#v}
+          wget -q "https://github.com/SagerNet/sing-box/releases/download/${TAG}/sing-box-${VERSION}-linux-amd64.tar.gz"
+          tar -xzf "sing-box-${VERSION}-linux-amd64.tar.gz"
+          mv "sing-box-${VERSION}-linux-amd64/sing-box" . && chmod +x sing-box
+          
+          # 2. 自动化协议解析脚本 (核心逻辑)
+          python3 << 'PYEOF'
+          import os, json, base64
+          from urllib.parse import urlparse, parse_qs, unquote
+
+          def generate_singbox_config():
+              url = os.environ.get("PROXY_NODE", "").strip()
+              p = urlparse(url)
+              scheme = p.scheme.lower()
+              params = {k: v[0] for k, v in parse_qs(p.query).items()}
+              
+              config = {
+                  "log": {"level": "info"},
+                  "inbounds": [{"type": "socks", "tag": "socks-in", "listen": "127.0.0.1", "listen_port": 10808}],
+                  "outbounds": []
+              }
+              
+              # 提取账号基础信息
+              raw_auth = unquote(p.netloc.split('@')[0] if '@' in p.netloc else "")
+              server = p.hostname
+              port = int(p.port or 443)
+              sni = params.get("sni", server)
+
+              outbound = {"tag": "proxy", "server": server, "server_port": port}
+
+              # --- 分流逻辑 1: VLESS (针对普通 TLS + WS 优化) ---
+              if scheme == "vless":
+                  outbound.update({
+                      "type": "vless",
+                      "uuid": raw_auth or p.username,
+                      "packet_encoding": "xudp",
+                      "tls": {"enabled": True, "server_name": sni, "insecure": True}
+                  })
+                  # 特别处理：如果是 WebSocket 传输
+                  if params.get("type") == "ws":
+                      outbound["transport"] = {
+                          "type": "ws",
+                          "path": unquote(params.get("path", "/")),
+                          "headers": {"Host": sni}
+                      }
+                  # 特别处理：如果是 Reality 模式
+                  if params.get("security") == "reality":
+                      outbound["tls"]["reality"] = {
+                          "enabled": True,
+                          "public_key": params.get("pbk", ""),
+                          "short_id": params.get("sid", "")
+                      }
+
+              # --- 分流逻辑 2: TUIC (保持原本可用的配置) ---
+              elif scheme == "tuic":
+                  u, pwd = raw_auth.split(':', 1) if ':' in raw_auth else (raw_auth, "")
+                  outbound.update({
+                      "type": "tuic", "uuid": u, "password": pwd,
+                      "congestion_control": params.get("congestion_control", "cubic"),
+                      "tls": {"enabled": True, "server_name": sni, "alpn": ["h3"], "insecure": True}
+                  })
+
+              # --- 分流逻辑 3: Hysteria2 / VMess 兜底 ---
+              elif scheme in ["hysteria2", "hy2"]:
+                  outbound.update({
+                      "type": "hysteria2", "password": raw_auth,
+                      "tls": {"enabled": True, "server_name": sni, "insecure": True}
+                  })
+              elif scheme == "vmess":
+                  try:
+                      content = url[8:].split("#")[0]
+                      vm = json.loads(base64.b64decode(content + "="*(4-len(content)%4)).decode())
+                      outbound.update({"type": "vmess", "server": vm['add'], "server_port": int(vm['port']), "uuid": vm['id'], "security": "auto"})
+                      if vm.get('tls') == "tls":
+                          outbound["tls"] = {"enabled": True, "server_name": vm.get('sni', vm['add']), "insecure": True}
+                  except: pass
+
+              config["outbounds"].append(outbound)
+              config["outbounds"].append({"type": "direct", "tag": "direct"})
+              return config
+
+          with open("config.json", "w") as f:
+              json.dump(generate_singbox_config(), f, indent=2)
+          PYEOF
+          
+          # 3. 后台运行并等待握手
+          ./sing-box run -c config.json > proxy.log 2>&1 &
+          echo "[INFO] 正在等待代理建立连接 (15秒)..."
+          sleep 15
+          
+          # 4. 连通性最终验证
+          if curl -x socks5://127.0.0.1:10808 -s --max-time 15 https://www.google.com > /dev/null; then
+            echo "[INFO] ✅ 代理适配成功！当前协议: $(jq -r '.outbounds[0].type' config.json | tr '[:lower:]' '[:upper:]')"
+            echo "PROXY_SOCKS5=socks5://127.0.0.1:10808" >> $GITHUB_ENV
+          else
+            echo "[ERROR] ❌ 代理连接失败。脱敏配置预览如下："
+            jq 'del(.outbounds[0].uuid, .outbounds[0].password)' config.json
+            echo "--- 错误日志预览 ---"
+            cat proxy.log
+            exit 1
+          fi
 
       # 5. 运行 Python 脚本 (修正了环境变量映射，并强制使用 socks5h)
       - name: Run renew script
@@ -60,7 +151,7 @@ jobs:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}    
           # 协议改为 socks5h，利用远程 DNS 解析解决 GitHub 屏蔽 api.telegram.org 的问题
-          PROXY_URL: "socks5h://127.0.0.1:10808" 
+       #   PROXY_URL: "socks5h://127.0.0.1:10808" 
         run: python ghost.py
 
       # 6. 更新 README (即使脚本出错也会运行，保留最后的状态)
