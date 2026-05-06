@@ -23,11 +23,12 @@ jobs:
         with:
           python-version: '3.10'
 
-      # 2. 安装 Chrome 浏览器
-      - name: Install Google Chrome
+      - name: Set up Chrome & ChromeDriver
         run: |
           sudo apt-get update
           sudo apt-get install -y google-chrome-stable
+          sudo rm -rf /usr/bin/chromedriver
+          sudo rm -rf /usr/local/bin/chromedriver
 
       # 3. 安装依赖 (增加 [socks] 扩展，这是请求 TG 成功的关键)
       - name: Install dependencies
