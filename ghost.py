@@ -52,12 +52,13 @@ def send_notice(kind, fields):
     # --- Telegram 通知逻辑 ---
     if TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID:
         # 使用 socks5h 代理确保 Telegram 的请求能绕过 GitHub 封锁
-        proxies = {"http": PROXY_URL, "https": PROXY_URL} if PROXY_URL else None
+      #  proxies = {"http": PROXY_URL, "https": PROXY_URL} if PROXY_URL else None
+       
         try:
             r = requests.post(
                 f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage",
                 data={"chat_id": TELEGRAM_CHAT_ID, "text": msg, "parse_mode": "HTML"},
-                proxies=proxies,
+            #    proxies=proxies,
                 timeout=20
             )
             if r.status_code == 200:
@@ -82,16 +83,16 @@ class GH:
         opts.add_argument("--disable-dev-shm-usage")
         
         sw_options = {}
-        if PROXY_URL:
+       # if PROXY_URL:
             # 这里的 PROXY_URL 会被 selenium-wire 捕获
-            sw_options = {
-                'proxy': {
-                    'http': PROXY_URL,
-                    'https': PROXY_URL,
-                    'no_proxy': 'localhost,127.0.0.1' 
-                }
-            }
-            print(f"🔧 Selenium 代理已配置: {PROXY_URL}")
+      #      sw_options = {
+        #        'proxy': {
+          #          'http': PROXY_URL,
+          #          'https': PROXY_URL,
+          #          'no_proxy': 'localhost,127.0.0.1' 
+          #      }
+         #   }
+         #   print(f"🔧 Selenium 代理已配置: {PROXY_URL}")
 
         self.d = webdriver.Chrome(options=opts, seleniumwire_options=sw_options)
         self.w = WebDriverWait(self.d, 30)
