@@ -15,7 +15,7 @@ PASSWORD = os.getenv("GREATHOST_PASSWORD", "")
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "")
 TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID", "")
 TARGET_NAME = os.getenv("TARGET_NAME", "myserver1")
-# 从 YML 环境变量获取代理，默认 None
+# 获取 YML 传进来的代理地址
 PROXY_ENV = os.getenv("PROXY_SOCKS5") 
 
 STATUS_MAP = {
@@ -52,8 +52,12 @@ def send_notice(kind, fields):
     msg = f"{titles.get(kind, '📢 通知')}\n\n{body}\n📅 时间: {now_shanghai()}"
     
     if TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID:
-        # 如果有代理，则强制使用 socks5h (远程解析 DNS)
-        proxies = {"http": PROXY_ENV.replace("socks5", "socks5h"), "https": PROXY_ENV.replace("socks5", "socks5h")} if PROXY_ENV else None
+        # TG 必须走代理，否则 GitHub 连不上
+        proxies = None
+        if PROXY_ENV:
+            p_url = PROXY_ENV.replace("socks5://", "socks5h://")
+            proxies = {"http": p_url, "https": p_url}
+            
         try:
             r = requests.post(
                 f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage",
@@ -61,15 +65,9 @@ def send_notice(kind, fields):
                 proxies=proxies,
                 timeout=20
             )
-            print(f"✅ Telegram 通知发送结果: {r.status_code}")
+            print(f"✅ Telegram 通知状态: {r.status_code}")
         except Exception as e:
-            print(f"❌ TG 请求异常: {e}")
-
-    try:
-        md = msg.replace("<b>", "**").replace("</b>", "**").replace("<code>", "`").replace("</code>", "`")
-        with open("README.md", "w", encoding="utf-8") as f:
-            f.write(f"# GreatHost 自动续期状态\n\n{md}\n\n> 最近更新: {now_shanghai()}")
-    except: pass
+            print(f"❌ TG 发送异常: {e}")
 
 class GH:
     def __init__(self):
@@ -81,8 +79,13 @@ class GH:
         
         sw_options = {}
         if PROXY_ENV:
-            # 自动将 socks5 转换为 socks5h 给 Selenium Wire
+            # 关键：同时在 Chrome 参数和 Selenium-Wire 中注入代理
             proxy_url = PROXY_ENV.replace("socks5://", "socks5h://")
+            
+            # 1. 给 Chrome 核心增加代理参数 (解决 ERR_CONNECTION_CLOSED)
+            opts.add_argument(f'--proxy-server={proxy_url}')
+            
+            # 2. 给 Selenium-Wire 增加拦截代理
             sw_options = {
                 'proxy': {
                     'http': proxy_url,
@@ -90,9 +93,9 @@ class GH:
                     'no_proxy': 'localhost,127.0.0.1'
                 }
             }
-            print(f"🔧 Selenium 代理已应用: {proxy_url}")
+            print(f"🔧 代理模式已开启: {proxy_url}")
 
-        # 使用 webdriver-manager 自动解决 Chromedriver 版本问题
+        # 自动下载驱动
         service = Service(ChromeDriverManager().install())
         self.d = webdriver.Chrome(service=service, options=opts, seleniumwire_options=sw_options)
         self.w = WebDriverWait(self.d, 30)
@@ -103,14 +106,20 @@ class GH:
 
     def get_ip(self):
         try:
-            self.d.get("https://api.ipify.org?format=json")
-            ip = json.loads(self.d.find_element(By.TAG_NAME, "body").text).get("ip", "Unknown")
-            print(f"🌐 当前环境出口 IP: {ip}")
-            return ip
+            # 增加重试逻辑，确保代理已完全建立
+            for _ in range(3):
+                try:
+                    self.d.get("https://api.ipify.org?format=json")
+                    ip = json.loads(self.d.find_element(By.TAG_NAME, "body").text).get("ip", "Unknown")
+                    print(f"🌐 出口 IP: {ip}")
+                    return ip
+                except:
+                    time.sleep(5)
+            return "Retry Failed"
         except: return "Unknown"
 
     def login(self):
-        print(f"🔑 登录中...")
+        print(f"🔑 尝试登录 GreatHost...")
         self.d.get("https://greathost.es/login")
         self.w.until(EC.presence_of_element_located((By.NAME, "email"))).send_keys(EMAIL)
         self.d.find_element(By.NAME, "password").send_keys(PASSWORD)
@@ -149,7 +158,7 @@ def run():
         ip = gh.get_ip()
         gh.login()
         srv = gh.get_server()
-        if not srv: raise Exception(f"未找到服务器 {TARGET_NAME}")
+        if not srv: raise Exception(f"找不到服务器: {TARGET_NAME}")
         sid = srv["id"]
         
         icon, stname = gh.get_status(sid)
@@ -159,7 +168,7 @@ def run():
 
         if "Wait" in btn:
             m = re.search(r"Wait\s+(\d+\s+\w+)", btn)
-            send_notice("cooldown", [("📛","名称",TARGET_NAME), ("⏳","冷却",m.group(1) if m else btn), ("📊","当前",f"{before}h")])
+            send_notice("cooldown", [("📛","名称",TARGET_NAME), ("⏳","等待",m.group(1) if m else btn), ("📊","累计",f"{before}h")])
             return
 
         res = gh.renew(sid)
@@ -167,11 +176,13 @@ def run():
         after = calculate_hours(res.get("details", {}).get("nextRenewalDate")) if ok else before
 
         if ok and after > before:
-            send_notice("renew_success", [("📛","名称",TARGET_NAME), ("⏰","增加",f"{before} ➔ {after}h"), ("🌐","IP",f"<code>{ip}</code>")])
+            send_notice("renew_success", [("📛","名称",TARGET_NAME), ("⏰","续期",f"{before}➔{after}h"), ("🌐","IP",f"<code>{ip}</code>")])
         else:
-            send_notice("renew_failed", [("📛","名称",TARGET_NAME), ("⏰","剩余",f"{before}h"), ("💡","提示",res.get("message","未知"))])
+            send_notice("renew_failed", [("📛","名称",TARGET_NAME), ("💡","提示",res.get("message","API未生效"))])
+            
     except Exception as e:
-        send_notice("error", [("📛", "名称", TARGET_NAME), ("❌", "原因", f"<code>{str(e)[:100]}</code>")])
+        print(f"🚨 报错详情: {e}")
+        send_notice("error", [("📛", "名称", TARGET_NAME), ("❌", "错误", f"<code>{str(e)[:100]}</code>")])
     finally:
         if 'gh' in locals(): gh.close()
 
