@@ -13,7 +13,7 @@ PASSWORD = os.getenv("GREATHOST_PASSWORD", "")
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "")
 TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID", "")
 # 这里的默认值与 YML 中的一致，使用 socks5h 协议
-PROXY_URL = os.getenv("PROXY_URL", "socks5h://127.0.0.1:10808") 
+# PROXY_URL = os.getenv("PROXY_URL", "socks5h://127.0.0.1:10808") 
 TARGET_NAME = os.getenv("TARGET_NAME", "myserver1")
 
 STATUS_MAP = {
