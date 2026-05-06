@@ -149,16 +149,16 @@ jobs:
             exit 1
           fi
 
-      # 5. 运行 Python 脚本 (修正了环境变量映射，并强制使用 socks5h)
+# 5. 运行 Python 脚本
       - name: Run renew script
         env:
           GREATHOST_EMAIL: ${{ secrets.GREATHOST_EMAIL }}
           GREATHOST_PASSWORD: ${{ secrets.GREATHOST_PASSWORD }}
-          # 修正：确保这里的 secrets 变量名与你 GitHub 后台一致
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}    
-          # 协议改为 socks5h，利用远程 DNS 解析解决 GitHub 屏蔽 api.telegram.org 的问题
-       #   PROXY_URL: "socks5h://127.0.0.1:10808" 
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          TARGET_NAME: ${{ secrets.TARGET_NAME }}
+          # 关键：将前面步骤中存入 $GITHUB_ENV 的变量提取出来
+          PROXY_SOCKS5: ${{ env.PROXY_SOCKS5 }}
         run: python ghost.py
 
       # 6. 更新 README (即使脚本出错也会运行，保留最后的状态)
