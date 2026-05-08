@@ -59,12 +59,11 @@ jobs:
       # 5. 运行 Python 脚本
       - name: Run renew script
         env:
-          GREATHOST_EMAIL: ${{ secrets.GREATHOST_EMAIL }}
-          GREATHOST_PASSWORD: ${{ secrets.GREATHOST_PASSWORD }}
+          ACCOUNTS_JSON: ${{ secrets.ACCOUNTS_JSON }}
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}    
           PROXY_URL: "socks5h://127.0.0.1:10808" 
-          TARGET_NAME: ${{ secrets.TARGET_NAME }}
+       #   TARGET_NAME: ${{ secrets.TARGET_NAME }}
         run: python ghost.py
 
       # 6. 更新 README
