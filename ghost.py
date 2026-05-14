@@ -51,8 +51,9 @@ def send_notice(kind, fields, account_email=""):
         try:
             r = requests.post(
                 f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage",
-                data={"chat_id": TELEGRAM_CHAT_ID, "text": msg, "parse_mode": "HTML"},
-                proxies=proxies, timeout=25
+                data={"chat_id": TELEGRAM_CHAT_ID, "text": msg, "parse_mode": "HTML"},              
+                 timeout=25 
+                #  proxies=proxies, timeout=25
             )
             print(f"📡 TG 回执: {r.status_code}")
         except Exception as e:
