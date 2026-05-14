@@ -59,7 +59,7 @@ jobs:
           sleep 2
 
           echo "[INFO] DNS 测试:"
-          nslookup host2play.gratis 1.1.1.1 || echo "[WARN] 解析失败"
+          nslookup greathost.es 1.1.1.1 || echo "[WARN] 解析失败"
 
           echo ""
           echo "[INFO] 当前出口 IP:"
